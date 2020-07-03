@@ -36,7 +36,8 @@ PYTHON_VER=3.7
 PYTHON=python
 # Determine name of output .so file
 ifeq ($(PYTHON_VER),2.7)
-	OUT_SO=build/lib.linux-x86_64-2.7/_kameleon.so
+	OUT_SO_FILE=_kameleon.so
+	OUT_SO=build/lib.linux-x86_64-2.7/$(OUT_SO_FILE)
 else
 #	Remove dot in PYTHON_VER
 	V=$(subst .,,$(PYTHON_VER))m
@@ -45,7 +46,8 @@ else
 #	What determines if m appears after version, e.g.,
 #	 _kameleon.cpython-3.7m-... vs _kameleon.cpython-3.8m?
 	endif
-	OUT_SO=build/lib.linux-x86_64-$(PYTHON_VER)/_kameleon.cpython-$(V)-x86_64-linux-gnu.so
+	OUT_SO_FILE=_kameleon.cpython-$(V)-x86_64-linux-gnu.so
+	OUT_SO=build/lib.linux-x86_64-$(PYTHON_VER)/$(OUT_SO_FILE)
 endif
 
 RELEASE=kameleonV-0.1.0
@@ -87,13 +89,24 @@ $(OUT_SO): kameleon_so.cpp kameleon.h kameleon.i $(KAMELEON) $(CONDA)/envs/$(PYT
 	$(PYTHON) setup.py build_ext --swig-opts=-c++ \
 		-lccmc --rpath=${KAMELEON_LIB} \
 		-L${KAMELEON_LIB} -I${KAMELEON_INCLUDE}
+	./relativize_libs.sh $(KAMELEON_SO)
+	cp $(KAMELEON_SO) lib/
+	./relativize_libs.sh $(OUT_SO)
+	cp $(OUT_SO) .
+	patchelf --set-rpath "\$$ORIGIN/lib" $(OUT_SO_FILE)
+	ls -1 lib/ | xargs -i ./relativize_libs.sh {}
+	cd lib; ls -1 | xargs -i patchelf --set-rpath "\$$ORIGIN/" {}
+	chmod 644 _*.so
+	chmod 644 lib/*.so*
+
+x:
 	- mkdir -p lib/
 	cp $(CDF_SO) lib/
 	- cp $(KAMELEON_SO).orig $(KAMELEON_SO)
 	cp $(KAMELEON_SO) $(KAMELEON_SO).orig
-	./relativize_libs.sh $(KAMELEON_SO)
+
 	patchelf --set-rpath "\$$ORIGIN/lib" $(OUT_SO)
-	cp $(OUT_SO) .
+
 	patchelf --set-rpath "\$$ORIGIN/." lib/libccmc.so.6.1.0.0
 	chmod 644 _*.so
 	chmod 644 lib/*.so
