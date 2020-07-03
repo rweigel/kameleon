@@ -5,22 +5,43 @@ CDF_TGZ=cdf36_4-dist-all.tar.gz
 CDF_LIB=${CDF_DIR}/src/lib/libcdf.so
 CDF_INCLUDES=${CDF_DIR}/src/include
 
-BOOST_TGZ=boost_1_54_0.tar.gz
-BOOST_ROOT=$(CURDIR)/deps/boost_1_54_0
+# This should match boost version installed by apt-get
+BOOST_URL=http://sourceforge.net/projects/boost/files/boost/1.67.0/boost_1_67_0.tar.gz
+BOOST_TGZ=boost_1_67_0.tar.gz
+BOOST_ROOT=$(CURDIR)/deps/boost_1_67_0
 
-kameleon: ${CDF_LIB} ${BOOST_ROOT}
+all:
+	make kameleon
+
+kameleon: ${CDF_LIB} ${BOOST_ROOT} $(CURDIR)/ccmc-software
 	- mkdir kameleon-plus-build
 	cd kameleon-plus-build; \
 		cmake -DBOOST_ROOT=${BOOST_ROOT} \
 			-DCDF_LIB=${CDF_LIB} -DCDF_INCLUDES=${CDF_INCLUDES} \
+			-DBUILD_JAVA=OFF \
+			-DINSTALL_CCMC_PYTHON_MODULE=OFF \
+			-DBUILD_HDF5=OFF \
 			${KAMELEON_DIR}
 	cd kameleon-plus-build/; make -j6 all
 	cd ccmc-software/kameleon-plus/trunk; find . -name "*.so"
+
+ccmc-software:
+	make $(CURDIR)/ccmc-software
+
+$(CURDIR)/ccmc-software:
+	git clone https://github.com/ccmc/ccmc-software.git
+# 	Checkout version Makefile tested on
+	cd ccmc-software; \
+		git checkout 0e2fb90add626f185b0b71cdb9a7b8b3b5c43266
+# 	Suppress stdout of "Kameleon::close() calling model's close"
+	cp patch/Kameleon.cpp \
+		./ccmc-software/kameleon-plus/trunk/kameleon-plus-working/src/ccmc
 
 boost:
 	make ${BOOST_ROOT}
 
 ${BOOST_ROOT}:
+	cd deps; wget -q -N $(BOOST_URL)
 	cd deps; tar zxvf ${BOOST_TGZ}
 
 cdf:
@@ -39,5 +60,6 @@ distclean:
 	make clean
 	- rm -rf ${CDF_DIR}
 	- rm -rf ${BOOST_ROOT}
+	- rm -rf deps/${BOOST_TGZ}
 	- rm -rf ccmc-software
 	- rm -rf kameleon-plus-build
