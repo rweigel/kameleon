@@ -31,9 +31,9 @@ echo "------"
 join <(ldd "$1" | awk '{if(substr($3,0,2)=="/") print $1,$3}' | sort) <(patchelf --print-needed "$1" | sort) | cut -d\  -f2
 
 # Modification ($3,0,1) -> ($3,0,2)
-join <(ldd "$1" | awk '{if(substr($3,0,2)=="/") print $1,$3}' | sort) <(patchelf --print-needed "$1" | sort) | cut -d\  -f2 | xargs -d '\n' -I{} cp --copy-contents -n {} ./lib
+#join <(ldd "$1" | awk '{if(substr($3,0,2)=="/") print $1,$3}' | sort) <(patchelf --print-needed "$1" | sort) | cut -d\  -f2 | xargs -d '\n' -I{} cp --copy-contents -n {} ./lib
 
-#ldd "$1" | awk '{if(substr($3,0,2)=="/") print $1,$3}' | cut -d\  -f2 | xargs -d '\n' -I{} cp --copy-contents -n {} .
+ldd "$1" | awk '{if(substr($3,0,2)=="/") print $1,$3}' | cut -d\  -f2 | xargs -d '\n' -I{} cp --copy-contents -n {} lib/
 
 #make the relative lib paths override the system lib path
 # Original:

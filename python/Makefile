@@ -87,7 +87,7 @@ out_so:
 $(OUT_SO): kameleon_so.cpp kameleon.h kameleon.i $(KAMELEON) $(CONDA)/envs/$(PYTHON_VER)
 	$(CONDA_ACTIVATE) $(PYTHON_VER); \
 	$(PYTHON) setup.py build_ext --swig-opts=-c++ \
-		-lccmc --rpath=${KAMELEON_LIB} \
+		-lccmc \
 		-L${KAMELEON_LIB} -I${KAMELEON_INCLUDE}
 	./relativize_libs.sh $(KAMELEON_SO)
 	cp $(KAMELEON_SO) lib/
