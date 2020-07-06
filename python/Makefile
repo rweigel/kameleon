@@ -9,24 +9,21 @@
 # After editing the variables CDF_LIB, CDF_SO, and PYTHON_INCLUDE in this Makefile execute
 #   make
 
-#KAMELEON_DIR=/home/osboxes/git
-KAMELEON_DIR=$(CURDIR)/..
+RELEASE=kameleonV-0.2.0
 
-CDF_DIR=$(KAMELEON_DIR)/deps/cdf36_4-dist
-KAMELEON_PLUS=$(KAMELEON_DIR)/ccmc-software/kameleon-plus/trunk/kameleon-plus-working
+KAMELEON_ROOT=$(CURDIR)/../ccmc-software/kameleon-plus/trunk/kameleon-plus-working
+KAMELEON_INCLUDE=$(KAMELEON_ROOT)/src
+KAMELEON_LIB=$(KAMELEON_ROOT)/lib/ccmc
+KAMELEON_SO=$(KAMELEON_LIB)/libccmc.so.6.1.0.0
 
+CDF_DIR=$(CURDIR)/../$(KAMELEON_DIR)/deps/cdf36_4-dist
 CDF_LIB=${CDF_DIR}/src/lib
 CDF_SO=$(CDF_LIB)/libcdf.so
 
-KAMELEON_INCLUDE=$(KAMELEON_PLUS)/src
-KAMELEON_LIB=$(KAMELEON_PLUS)/lib/ccmc
-KAMELEON_SO=$(KAMELEON_LIB)/libccmc.so.6.1.0.0
-
-CONDA=/home/osboxes/miniconda3
-CONDA_ACTIVATE=source $(CONDA)/etc/profile.d/conda.sh ; conda activate
+CONDA=/home/user/miniconda3
+CONDA_ACTIVATE=source $(CONDA)/etc/profile.d/conda.sh; conda activate
 
 SHELL=/bin/bash
-
 TMPDIR=/tmp
 
 TESTURL=http://mag.gmu.edu/git-data/bcurtiswx/Differences/data/Sean_Blake_081318_1/GM_CDF/
@@ -50,7 +47,6 @@ else
 	OUT_SO=build/lib.linux-x86_64-$(PYTHON_VER)/$(OUT_SO_FILE)
 endif
 
-RELEASE=kameleonV-0.1.0
 
 # TODO: Use loop over Python versions
 all:
@@ -77,25 +73,32 @@ testfile:
 $(TMPDIR)/$(TESTFILE):
 	- cd $(TMPDIR); wget -N $(TESTURL)$(TESTFILE)
 
-test_so: $(OUT_SO) kameleonV_test.py
+test_so: $(OUT_SO_FILE) kameleonV_test.py
 	make testfile
 	$(CONDA_ACTIVATE) $(PYTHON_VER); $(PYTHON) kameleonV_test.py
 
-out_so:
-	make $(OUT_SO)
+patchelf:
+	make /usr/bin/patchelf
 
-$(OUT_SO): kameleon_so.cpp kameleon.h kameleon.i $(KAMELEON) $(CONDA)/envs/$(PYTHON_VER)
+/usr/bin/patchelf:
+	sudo apt install patchelf
+
+out_so:
+	make $(OUT_SO_FILE)
+
+$(OUT_SO_FILE): kameleon_so.cpp kameleon.h kameleon.i $(KAMELEON) $(CONDA)/envs/$(PYTHON_VER)
+	make patchelf
 	$(CONDA_ACTIVATE) $(PYTHON_VER); \
 	$(PYTHON) setup.py build_ext --swig-opts=-c++ \
 		-lccmc \
 		-L${KAMELEON_LIB} -I${KAMELEON_INCLUDE}
-	./relativize_libs.sh $(KAMELEON_SO)
+	./relativize_libs.sh $(KAMELEON_SO) lib/
 	cp $(KAMELEON_SO) lib/
-	./relativize_libs.sh $(OUT_SO)
+	./relativize_libs.sh $(OUT_SO) lib/
 	cp $(OUT_SO) .
 	patchelf --set-rpath "\$$ORIGIN/lib" $(OUT_SO_FILE)
-	ls -1 lib/ | xargs -i ./relativize_libs.sh {}
-	cd lib; ls -1 | xargs -i patchelf --set-rpath "\$$ORIGIN/" {}
+	cd lib/; ls -1 | xargs -i ../relativize_libs.sh {} .
+	cd lib/; ls -1 | xargs -i patchelf --set-rpath "\$$ORIGIN/" {}
 	chmod 644 _*.so
 	chmod 644 lib/*.so*
 
@@ -112,7 +115,11 @@ x:
 	chmod 644 lib/*.so
 
 $(CONDA):
+	echo ""
+	echo ""
 	echo "Select y for all questions"
+	echo ""
+	echo ""
 	cd /tmp; wget \
 		https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 	cd /tmp; bash Miniconda3-latest-Linux-x86_64.sh
@@ -151,6 +158,7 @@ $(RELEASE): _*.so release/
 
 clean:
 	-@rm -rf build/
+	-@rm -rf *.so
 	-@rm -f kameleon_wrap.cpp
 	-@rm -f kameleon.py
 	-@rm -f kameleon_cl
