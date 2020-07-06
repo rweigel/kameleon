@@ -9,7 +9,7 @@
 # After editing the variables CDF_LIB, CDF_SO, and PYTHON_INCLUDE in this Makefile execute
 #   make
 
-RELEASE=kameleonV-0.2.0
+RELEASE=kameleonV-0.2.1
 
 KAMELEON_ROOT=$(CURDIR)/../ccmc-software/kameleon-plus/trunk/kameleon-plus-working
 KAMELEON_INCLUDE=$(KAMELEON_ROOT)/src
@@ -33,7 +33,7 @@ PYTHON_VER=3.7
 PYTHON=python
 # Determine name of output .so file
 ifeq ($(PYTHON_VER),2.7)
-	OUT_SO_FILE=_kameleon.so
+	OUT_SO_FILE=_kameleonV.so
 	OUT_SO=build/lib.linux-x86_64-2.7/$(OUT_SO_FILE)
 else
 #	Remove dot in PYTHON_VER
@@ -43,7 +43,7 @@ else
 #	What determines if m appears after version, e.g.,
 #	 _kameleon.cpython-3.7m-... vs _kameleon.cpython-3.8m?
 	endif
-	OUT_SO_FILE=_kameleon.cpython-$(V)-x86_64-linux-gnu.so
+	OUT_SO_FILE=_kameleonV.cpython-$(V)-x86_64-linux-gnu.so
 	OUT_SO=build/lib.linux-x86_64-$(PYTHON_VER)/$(OUT_SO_FILE)
 endif
 
@@ -86,12 +86,13 @@ patchelf:
 out_so:
 	make $(OUT_SO_FILE)
 
-$(OUT_SO_FILE): kameleon_so.cpp kameleon.h kameleon.i $(KAMELEON) $(CONDA)/envs/$(PYTHON_VER)
+$(OUT_SO_FILE): kameleonV.cpp kameleonV.h kameleonV.i $(KAMELEON) $(CONDA)/envs/$(PYTHON_VER)
 	make patchelf
 	$(CONDA_ACTIVATE) $(PYTHON_VER); \
 	$(PYTHON) setup.py build_ext --swig-opts=-c++ \
 		-lccmc \
 		-L${KAMELEON_LIB} -I${KAMELEON_INCLUDE}
+	cp kameleonV_interface.py kameleonV.py
 	./relativize_libs.sh $(KAMELEON_SO) lib/
 	cp $(KAMELEON_SO) lib/
 	./relativize_libs.sh $(OUT_SO) lib/
@@ -159,8 +160,7 @@ $(RELEASE): _*.so release/
 clean:
 	-@rm -rf build/
 	-@rm -rf *.so
-	-@rm -f kameleon_wrap.cpp
-	-@rm -f kameleon.py
+	-@rm -f kameleonV_wrap.cpp
 	-@rm -f kameleon_cl
 	-@rm -f *.pyc
 	-@rm -f *~

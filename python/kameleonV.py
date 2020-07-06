@@ -1,6 +1,6 @@
-import _kameleon as kameleon
+import _kameleonV
 
-def interpolate(fname, x, y, z, var):
+def interpolate(fname, x, y, z, var, debug=0):
 
     assert(len(x) == len(y) == len(z))
     assert(type(x) == type(y) == type(z))
@@ -15,8 +15,7 @@ def interpolate(fname, x, y, z, var):
         except:
             raise(ValueError, "x, y, and z must be of type list or numpy.array")
                 
-    #x = kameleon.runner(fname, x, y, z, len(x), var)
-    x = kameleon.runner(fname, x, y, z, len(x))
+    x = _kameleonV.interpolate(fname, x, y, z, len(x), var, debug)
 
     if return_array:
         return np.array(x)

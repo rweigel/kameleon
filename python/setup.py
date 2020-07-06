@@ -1,7 +1,7 @@
 from distutils.core import *
 from distutils      import sysconfig
 
-_kameleon = Extension("_kameleon", ["kameleon.i","kameleon_so.cpp"])
+_kameleonV = Extension("_kameleonV", ["kameleonV.i","kameleonV.cpp"])
 
 _DEBUG = False
 _DEBUG_LEVEL = 0
@@ -21,7 +21,7 @@ setup(  name        = "kameleonV",
         description = "",
         author      = "R.S. Weigel",
         version     = "0.0.1",
-        ext_modules = [_kameleon]
+        ext_modules = [_kameleonV]
         )
 
 
