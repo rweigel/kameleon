@@ -5,13 +5,18 @@ CDF_TGZ=cdf36_4-dist-all.tar.gz
 CDF_LIB=${CDF_DIR}/src/lib/libcdf.so
 CDF_INCLUDES=${CDF_DIR}/src/include
 
-# This should match boost version installed by apt-get
+# This should match boost version installed by apt, but has worked with 1.64 installed
+# by apt.
 BOOST_URL=http://sourceforge.net/projects/boost/files/boost/1.67.0/boost_1_67_0.tar.gz
 BOOST_TGZ=boost_1_67_0.tar.gz
 BOOST_ROOT=$(CURDIR)/deps/boost_1_67_0
 
 all:
+	make deps
 	make kameleon
+
+deps:
+	sudo apt install -y gfortran cmake python-dev libboost-all-dev swig
 
 kameleon: ${CDF_LIB} ${BOOST_ROOT} $(CURDIR)/ccmc-software
 	- mkdir kameleon-plus-build

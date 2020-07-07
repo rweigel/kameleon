@@ -9,7 +9,7 @@
 # After editing the variables CDF_LIB, CDF_SO, and PYTHON_INCLUDE in this Makefile execute
 #   make
 
-RELEASE=kameleonV-0.2.1
+RELEASE=kameleonV-0.2.3
 
 KAMELEON_ROOT=$(CURDIR)/../ccmc-software/kameleon-plus/trunk/kameleon-plus-working
 KAMELEON_INCLUDE=$(KAMELEON_ROOT)/src
@@ -20,7 +20,7 @@ CDF_DIR=$(CURDIR)/../$(KAMELEON_DIR)/deps/cdf36_4-dist
 CDF_LIB=${CDF_DIR}/src/lib
 CDF_SO=$(CDF_LIB)/libcdf.so
 
-CONDA=/home/user/miniconda3
+CONDA=$(CURDIR)/miniconda3
 CONDA_ACTIVATE=source $(CONDA)/etc/profile.d/conda.sh; conda activate
 
 SHELL=/bin/bash
@@ -55,7 +55,7 @@ all:
 	make test_so PYTHON_VER=3.6
 	make test_so PYTHON_VER=3.7
 	make test_so PYTHON_VER=3.8
-	make release
+	make dist
 	make test_release PYTHON_VER=2.7
 	make test_release PYTHON_VER=3.5
 	make test_release PYTHON_VER=3.6
@@ -103,27 +103,9 @@ $(OUT_SO_FILE): kameleonV.cpp kameleonV.h kameleonV.i $(KAMELEON) $(CONDA)/envs/
 	chmod 644 _*.so
 	chmod 644 lib/*.so*
 
-x:
-	- mkdir -p lib/
-	cp $(CDF_SO) lib/
-	- cp $(KAMELEON_SO).orig $(KAMELEON_SO)
-	cp $(KAMELEON_SO) $(KAMELEON_SO).orig
-
-	patchelf --set-rpath "\$$ORIGIN/lib" $(OUT_SO)
-
-	patchelf --set-rpath "\$$ORIGIN/." lib/libccmc.so.6.1.0.0
-	chmod 644 _*.so
-	chmod 644 lib/*.so
-
 $(CONDA):
-	echo ""
-	echo ""
-	echo "Select y for all questions"
-	echo ""
-	echo ""
-	cd /tmp; wget \
-		https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-	cd /tmp; bash Miniconda3-latest-Linux-x86_64.sh
+	wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+	bash Miniconda3-latest-Linux-x86_64.sh -b -p $(CONDA)
 
 $(CONDA)/envs/$(PYTHON_VER): $(CONDA)
 	$(CONDA_ACTIVATE); \
@@ -146,12 +128,11 @@ test_release:
 	cd release/$(RELEASE); \
 		$(CONDA_ACTIVATE) $(PYTHON_VER); $(PYTHON) kameleonV_test.py
 
-release:
-	echo $(RELEASE)
-	mkdir -p release
-	make $(RELEASE)
+dist:
+	make release/$(RELEASE).tgz
 
-$(RELEASE): _*.so release/
+release/$(RELEASE).tgz:
+	mkdir -p release
 	- mkdir -p release/$(RELEASE)
 	cp kameleonV_test.py kameleonV.py _*.so release/$(RELEASE)
 	cp -r lib release/$(RELEASE)
@@ -159,7 +140,9 @@ $(RELEASE): _*.so release/
 
 clean:
 	-@rm -rf build/
+	-@rm -rf lib/
 	-@rm -rf *.so
+	-@rm -f kameleonV.py
 	-@rm -f kameleonV_wrap.cpp
 	-@rm -f kameleon_cl
 	-@rm -f *.pyc
@@ -168,8 +151,8 @@ clean:
 
 distclean:
 	make clean
-	-@rm -f *.so
-	-@rm -rf lib/
+	-@rm -f miniconda3
+	-@rm -f Miniconda3*.sh
 	- rm -f $(TMPDIR)/3d__var_3_e20031120-070000-000.out.cdf
 
 ######################################################################

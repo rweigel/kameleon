@@ -12,20 +12,22 @@ mkdir -p "$2" # copy the libraries here
 
 #join <(ldd "$1" |awk '{if(substr($3,0,1)=="/") print $1,$3}' |sort) <(patchelf --print-needed "$1" |sort) |cut -d\  -f2 | xargs -d '\n' -I{} cp --copy-contents {} ./lib
 
-echo "------"
-echo "Listed by ldd $1"
-echo "------"
-ldd "$1" | awk '{if(substr($3,0,2)=="/") print $1,$3}' | sort
-echo "------"
-echo "Needed according to patchelf --print-needed $1"
-echo "------"
-patchelf --print-needed "$1" | sort
+if [ 0 ]; then
+    echo "------"
+    echo "Listed by ldd $1"
+    echo "------"
+    ldd "$1" | awk '{if(substr($3,0,2)=="/") print $1,$3}' | sort
+    echo "------"
+    echo "Needed according to patchelf --print-needed $1"
+    echo "------"
+    patchelf --print-needed "$1" | sort
 
-echo "------"
-echo "Copying these files to $2"
-echo "------"
-# Modification ($3,0,1) -> ($3,0,2)
-join <(ldd "$1" | awk '{if(substr($3,0,2)=="/") print $1,$3}' | sort) <(patchelf --print-needed "$1" | sort) | cut -d\  -f2
+    echo "------"
+    echo "Copying these files to $2"
+    echo "------"
+    # Modification ($3,0,1) -> ($3,0,2)
+    join <(ldd "$1" | awk '{if(substr($3,0,2)=="/") print $1,$3}' | sort) <(patchelf --print-needed "$1" | sort) | cut -d\  -f2
+fi
 
 join <(ldd "$1" | awk '{if(substr($3,0,2)=="/") print $1,$3}' | sort) <(patchelf --print-needed "$1" | sort) | cut -d\  -f2 | xargs -d '\n' -I{} cp --copy-contents -n {} ./lib
 

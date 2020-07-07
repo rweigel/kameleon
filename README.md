@@ -7,12 +7,7 @@ Based on https://ccmc.gsfc.nasa.gov/downloads/kameleon_instructions/html/Quick_s
 See also https://ccmc.gsfc.nasa.gov/Kameleon/
 
 ```
-sudo apt-get install gfortran
-sudo apt-get install cmake
-sudo apt-get install python-dev
-sudo apt-get install libboost-all-dev
-sudo apt-get install libhdf5-dev
-sudo apt-get install swig
+sudo apt install gfortran cmake python-dev libboost-all-dev swig
 ```
 
 From this directory

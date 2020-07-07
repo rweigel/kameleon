@@ -42,7 +42,7 @@ std::vector<float> interpolate (char* filename, std::vector<float> x, std::vecto
   }
 
   for (int k = 0; k < N; k++) {
-    x[k] = interpolator1->interpolate("p",  x[k], y[k], z[k]);
+    x[k] = interpolator1->interpolate(var,  x[k], y[k], z[k]);
   }
 
   if (debug == 1) {
